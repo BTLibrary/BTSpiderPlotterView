@@ -11,7 +11,8 @@
 
 @interface BTSpiderPlotterView : UIView
 
-//example dictionary
+//Example value dictionary
+//No less than 3 entries for the same reason as why the chair do not stand on 2 legs
 /*
  @{@"Design": @"7",
  @"Display Life": @"9",
@@ -22,6 +23,7 @@
  @"Battery Life" : @"9",
  @"Ecosystem": @"8"};
  */
+
 - (id)initWithFrame:(CGRect)frame valueDictionary:(NSDictionary *)valueDictionary;
 
 @property (nonatomic, assign) CGFloat valueDivider; // default 1
@@ -29,4 +31,9 @@
 @property (nonatomic, strong) UIColor *drawboardColor; // defualt black
 @property (nonatomic, strong) UIColor *plotColor; // defualt dark grey
 
+//Contributed by Cdtschange - https://github.com/cdtschange
+//Animate changes in the value on the spot
+-(void)animateWithDuration:(NSTimeInterval)duration valueDictionary:(NSDictionary *)valueDictionary;
+
+    
 @end

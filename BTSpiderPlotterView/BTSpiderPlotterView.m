@@ -10,7 +10,7 @@
 
 @implementation BTSpiderPlotterView{
     //Value and key
-    NSDictionary *_valueDictionary;
+    NSMutableDictionary *_valueDictionary;
     
     CGFloat _centerX;
     CGFloat _centerY;
@@ -18,6 +18,12 @@
     //Plotting and UI Array
     NSMutableArray *_pointsLengthArrayArray;
     NSMutableArray *_pointsToPlotArray;
+    
+    //Animation
+    CADisplayLink *_displayLink;
+    NSMutableDictionary *_animationStepValueDictionary;
+    NSMutableDictionary *_targetValueDictionary;;
+    
 }
 
 - (id)initWithFrame:(CGRect)frame valueDictionary:(NSDictionary *)valueDictionary
@@ -29,7 +35,7 @@
         
         
         //Private iVar
-        _valueDictionary = valueDictionary;
+        _valueDictionary = [valueDictionary mutableCopy];
         _pointsLengthArrayArray = [NSMutableArray array];
         _pointsToPlotArray = [NSMutableArray array];
         
@@ -94,7 +100,6 @@
      
 }
 
-
 #pragma mark - Main Function
 - (void)calculateAllPoints
 {
@@ -143,7 +148,7 @@
     [self drawLabelWithMaxLength:maxLength labelArray:keyArray angleArray:angleArray];
     
 }
-
+    
 #pragma mark - Helper Function
 - (NSArray *)getAngleArrayFromNumberOfSection:(int)numberOfSection
 {
@@ -230,6 +235,67 @@
     }
 }
 
+#pragma mark - Animation: Contributed by Cdtschange - https://github.com/cdtschange
+- (void)animateWithDuration:(NSTimeInterval)duration valueDictionary:(NSDictionary *)valueDictionary
+{
+    if (!_displayLink) {
+        _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(reportProgress:)];
+        _displayLink.frameInterval = 1/20.0;
+        [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    }
+    _targetValueDictionary = [NSMutableDictionary dictionaryWithDictionary:valueDictionary];
+    long long times = duration*40;
+    _displayLink.paused = YES;
+    _animationStepValueDictionary  = [NSMutableDictionary new];
+    NSArray *keyArray1 = [_valueDictionary allKeys];
+    NSArray *valueArray1 = [self getValueArrayFromDictionary:_valueDictionary keyArray:keyArray1];
+    NSArray *keyArray2 = [valueDictionary allKeys];
+    NSArray *valueArray2 = [self getValueArrayFromDictionary:valueDictionary keyArray:keyArray2];
+    if (keyArray1.count!=keyArray2.count) {
+        return;
+    }
+    for (int i = 0; i < keyArray2.count; i++) {
+        _animationStepValueDictionary [keyArray2[i]] = [NSString stringWithFormat:@"%f",([valueArray2[i] floatValue]-[valueArray1[i] floatValue])/times];
+    }
+    _displayLink.paused = NO;
+}
+- (void)reportProgress:(CADisplayLink *)dl
+{
+    NSArray *keyArray = [_valueDictionary allKeys];
+    for (NSString *key in keyArray) {
+        double delta = [_targetValueDictionary[key] floatValue] - [_valueDictionary[key] floatValue];
+        double minusDelta =  [_animationStepValueDictionary [key] floatValue];
+        if ((delta >= 0 && minusDelta <= 0) || (delta <= 0 && minusDelta >= 0)) {
+            if ([self checkIsToTarget]) {
+                _displayLink.paused = YES;
+                _valueDictionary = _targetValueDictionary;
+                [self calculateAllPoints];
+                [self setNeedsDisplay];
+                return;
+            }else{
+                continue;
+            }
+        }
+        float value = [_valueDictionary[key] floatValue]+[_animationStepValueDictionary[key] floatValue];
+        _valueDictionary[key] = [NSString stringWithFormat:@"%f",value];
+    }
+    [self calculateAllPoints];
+    [self setNeedsDisplay];
+}
+    
+- (BOOL)checkIsToTarget
+{
+    NSArray *keyArray = [_valueDictionary allKeys];
+    for (NSString *key in keyArray) {
+        double delta = [_targetValueDictionary[key] floatValue] - [_valueDictionary[key] floatValue];
+        double minusDelta =  [_animationStepValueDictionary [key] floatValue];
+        if ((delta > 0 && minusDelta > 0) || (delta < 0 && minusDelta < 0)) {
+            return NO;
+        }
+    }
+    return YES;
+}
+    
 #pragma mark - setters
 - (void)setValueDivider:(CGFloat)valueDivider
 {
