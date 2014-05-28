@@ -27,3 +27,5 @@ The view is a subclass of a UIView. It determines the best fit size for the give
 
 Please view example project to get the idea of how to implement. 
 * please have at least 3 key-pair value dictionary for obvious reasons
+
+Animation code was contributed by Cdtschange - https://github.com/cdtschange
