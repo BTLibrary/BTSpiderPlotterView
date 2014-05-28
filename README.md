@@ -1,5 +1,8 @@
 BTSpiderPlotterView
 ===================
+
+![sample](/Gifs/spiderview.gif)
+
 This is a view for you to use as-is or modify the source. The view comes loaded with the ability to:
 
 1. Plot a spider web graph from a data dictionary to fit the view given  
